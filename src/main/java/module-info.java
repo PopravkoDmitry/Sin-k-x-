@@ -1,8 +1,8 @@
-module com.example.test {
+module com.example.sinfx {
     requires javafx.controls;
     requires javafx.fxml;
 
 
-    opens com.example.test to javafx.fxml;
-    exports com.example.test;
+    opens com.example.sinfx to javafx.fxml;
+    exports com.example.sinfx;
 }
