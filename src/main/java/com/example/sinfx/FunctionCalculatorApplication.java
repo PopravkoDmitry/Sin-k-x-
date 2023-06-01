@@ -1,5 +1,8 @@
 package com.example.sinfx;
 
+import com.example.function_calculators.CFFunctionCalculator;
+import com.example.function_calculators.DefaultThreadFunctionCalculator;
+import com.example.function_calculators.FunctionCalculationStrategy;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -7,8 +10,7 @@ import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
@@ -16,13 +18,10 @@ import javafx.stage.Stage;
 
 public class FunctionCalculatorApplication extends Application {
 
-    private Thread thread;
-    private double a = 1;
-    private double k = 1;
-    private double maxX = 10;
-    private final double stepX = 0.1;
+    private DefaultThreadFunctionCalculator defaultFunctionCalculator;
+    private CFFunctionCalculator cfFunctionCalculator;
+    private FunctionCalculationStrategy activeFunctionCalculationStrategy;
 
-    private final int sleepTime = 70;
     private final double bottomLineSpacing = 5;
     private TextField aTextField;
     private TextField xTextField;
@@ -40,23 +39,6 @@ public class FunctionCalculatorApplication extends Application {
             });
 
             dataSeries.getData().clear();
-            for (double x = 0; x <= maxX; x += stepX) {
-
-                var y = a * Math.sin(k * x);
-                var finalX = x;
-
-                Platform.runLater(() -> {
-                    dataSeries.getData().add(new XYChart.Data<>(finalX, y));
-                });
-
-                System.out.println(x);
-
-                try {
-                    Thread.sleep(sleepTime);
-                } catch (InterruptedException e) {
-                    return;
-                }
-            }
 
                 System.out.println("Completed");
                 Platform.runLater(() -> {
@@ -70,12 +52,35 @@ public class FunctionCalculatorApplication extends Application {
 
         NumberAxis xNumberAxis = new NumberAxis();
         NumberAxis yNumberAxis = new NumberAxis();
+        LineChart<Number, Number> lineChart = new LineChart<>(xNumberAxis, yNumberAxis);
+        dataSeries = new XYChart.Series<>();
+
+        defaultFunctionCalculator = new DefaultThreadFunctionCalculator(dataSeries, this::onCalculationEnd);
+        cfFunctionCalculator = new CFFunctionCalculator(dataSeries, this::onCalculationEnd);
+        activeFunctionCalculationStrategy = defaultFunctionCalculator;
+
+        MenuBar menuBar = new MenuBar();
+        Menu menu = new Menu("Active Calculation Type: Default Thread");
+        MenuItem menuItem1 = new MenuItem("Default Thread");
+        menuItem1.setOnAction(event -> {
+            activeFunctionCalculationStrategy = defaultFunctionCalculator;
+            menu.setText("Active Calculation Type: Default Thread");
+        });
+        MenuItem menuItem2 = new MenuItem("CompletableFuture");
+        menuItem2.setOnAction(event -> {
+            activeFunctionCalculationStrategy = cfFunctionCalculator;
+            menu.setText("Active Calculation Type: CompletableFuture");
+        });
+
+        menu.getItems().addAll(menuItem1, menuItem2);
+        menuBar.getMenus().add(menu);
+
         BorderPane borderPane = new BorderPane();
         HBox hBox = new HBox();
 
-        aTextField = new TextField(String.valueOf(a));
-        xTextField = new TextField(String.valueOf(maxX));
-        kTextField = new TextField(String.valueOf(k));
+        aTextField = new TextField("1");
+        xTextField = new TextField("10");
+        kTextField = new TextField("1");
 
         Text aText = new Text("A:");
         Text kText = new Text("k:");
@@ -85,21 +90,16 @@ public class FunctionCalculatorApplication extends Application {
         drawButton.setOnAction(this::setNewValuesAndRecalculateFunction);
         Button stopButton = new Button("Stop");
         stopButton.setOnAction(event -> {
-            if(thread != null) {
-
-                thread.interrupt();
-                drawButton.setDisable(false);
-            }
+            activeFunctionCalculationStrategy.stopCalculating();
+            drawButton.setDisable(false);
         });
 
         xNumberAxis.setLabel("x");
         yNumberAxis.setLabel("y");
 
-        LineChart<Number, Number> lineChart = new LineChart<>(xNumberAxis, yNumberAxis);
-        dataSeries = new XYChart.Series<>();
-
         lineChart.getData().add(dataSeries);
 
+        borderPane.setTop(menuBar);
         borderPane.setCenter(lineChart);
         borderPane.setBottom(hBox);
         hBox.setSpacing(bottomLineSpacing);
@@ -108,11 +108,7 @@ public class FunctionCalculatorApplication extends Application {
         Scene scene = new Scene(borderPane, 600, 600);
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> {
-
-            if(thread != null) {
-
-                thread.interrupt();
-            }
+            activeFunctionCalculationStrategy.stopCalculating();
         });
         stage.show();
     }
@@ -124,11 +120,17 @@ public class FunctionCalculatorApplication extends Application {
 
     private void setNewValuesAndRecalculateFunction(ActionEvent event) {
 
-        thread = new Thread(functionAnimation);
-        a = Double.parseDouble(aTextField.getText());
-        k = Double.parseDouble(kTextField.getText());
-        maxX = Double.parseDouble(xTextField.getText());
-        thread.start();
+        drawButton.setDisable(true);
+
+        activeFunctionCalculationStrategy.setCalculationValues(Double.parseDouble(aTextField.getText()),
+                Double.parseDouble(kTextField.getText()), Double.parseDouble(xTextField.getText()));
+        dataSeries.getData().clear();
+
+        activeFunctionCalculationStrategy.calculateWithDelay();
+    }
+
+    private void onCalculationEnd(Void unused) {
+
+        drawButton.setDisable(false);
     }
 }
-
