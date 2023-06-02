@@ -4,15 +4,13 @@ import com.example.function_calculators.CFFunctionCalculator;
 import com.example.function_calculators.DefaultThreadFunctionCalculator;
 import com.example.function_calculators.FunctionCalculationStrategy;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -24,48 +22,53 @@ public class FunctionCalculatorApplication extends Application {
 
     private final double bottomLineSpacing = 5;
     private TextField aTextField;
-    private TextField xTextField;
+    private TextField stepXTextField;
     private TextField kTextField;
-
     private Button drawButton;
-    private XYChart.Series<Number, Number> dataSeries;
+    private final Point2D applicationScale = new Point2D(600, 600);
 
-    private final Runnable functionAnimation = new Runnable() {
-        @Override
-        public void run() {
-
-            Platform.runLater(() -> {
-                drawButton.setDisable(true);
-            });
-
-            dataSeries.getData().clear();
-
-                System.out.println("Completed");
-                Platform.runLater(() -> {
-                    drawButton.setDisable(false);
-                });
-        }
-    };
+    private FunctionDrawer functionDrawer;
 
     @Override
     public void start(Stage stage) {
 
-        NumberAxis xNumberAxis = new NumberAxis();
-        NumberAxis yNumberAxis = new NumberAxis();
-        LineChart<Number, Number> lineChart = new LineChart<>(xNumberAxis, yNumberAxis);
-        dataSeries = new XYChart.Series<>();
+        aTextField = new TextField("50"); // 10
+        stepXTextField = new TextField("1"); // 1
+        kTextField = new TextField("300"); // 0.1
 
-        defaultFunctionCalculator = new DefaultThreadFunctionCalculator(dataSeries, this::onCalculationEnd);
-        cfFunctionCalculator = new CFFunctionCalculator(dataSeries, this::onCalculationEnd);
+        Text aText = new Text("A:");
+        Text kText = new Text("k:");
+        Text xText = new Text("Step:");
+
+        Canvas canvas = new Canvas(applicationScale.getX(), applicationScale.getY());
+        functionDrawer = new FunctionDrawer(canvas, new Point2D(0, canvas.getHeight() / 2));
+
+        defaultFunctionCalculator = new DefaultThreadFunctionCalculator(functionDrawer,
+                this::onCalculationEnd, applicationScale.getX());
+        cfFunctionCalculator = new CFFunctionCalculator(functionDrawer,
+                this::onCalculationEnd, applicationScale.getX());
         activeFunctionCalculationStrategy = defaultFunctionCalculator;
+
+
+
+        drawButton = new Button("Calculate y(x) = A*sin(k*x)");
+        Button stopButton = new Button("Stop");
+
+        drawButton.setOnAction(this::setNewValuesAndRecalculateFunction);
+        stopButton.setOnAction(event -> {
+            activeFunctionCalculationStrategy.stopCalculating();
+            drawButton.setDisable(false);
+        });
 
         MenuBar menuBar = new MenuBar();
         Menu menu = new Menu("Active Calculation Type: Default Thread");
+
         MenuItem menuItem1 = new MenuItem("Default Thread");
         menuItem1.setOnAction(event -> {
             activeFunctionCalculationStrategy = defaultFunctionCalculator;
             menu.setText("Active Calculation Type: Default Thread");
         });
+
         MenuItem menuItem2 = new MenuItem("CompletableFuture");
         menuItem2.setOnAction(event -> {
             activeFunctionCalculationStrategy = cfFunctionCalculator;
@@ -75,37 +78,17 @@ public class FunctionCalculatorApplication extends Application {
         menu.getItems().addAll(menuItem1, menuItem2);
         menuBar.getMenus().add(menu);
 
+        StackPane rootStackPain = new StackPane();
         BorderPane borderPane = new BorderPane();
         HBox hBox = new HBox();
 
-        aTextField = new TextField("1");
-        xTextField = new TextField("10");
-        kTextField = new TextField("1");
-
-        Text aText = new Text("A:");
-        Text kText = new Text("k:");
-        Text xText = new Text("Max x:");
-
-        drawButton = new Button("Calculate y(x) = A*sin(k*x)");
-        drawButton.setOnAction(this::setNewValuesAndRecalculateFunction);
-        Button stopButton = new Button("Stop");
-        stopButton.setOnAction(event -> {
-            activeFunctionCalculationStrategy.stopCalculating();
-            drawButton.setDisable(false);
-        });
-
-        xNumberAxis.setLabel("x");
-        yNumberAxis.setLabel("y");
-
-        lineChart.getData().add(dataSeries);
-
+        rootStackPain.getChildren().addAll(canvas, borderPane);
         borderPane.setTop(menuBar);
-        borderPane.setCenter(lineChart);
         borderPane.setBottom(hBox);
         hBox.setSpacing(bottomLineSpacing);
-        hBox.getChildren().addAll(aText, aTextField, xText, xTextField, kText, kTextField, drawButton, stopButton);
+        hBox.getChildren().addAll(aText, aTextField, xText, stepXTextField, kText, kTextField, drawButton, stopButton);
 
-        Scene scene = new Scene(borderPane, 600, 600);
+        Scene scene = new Scene(rootStackPain, applicationScale.getX(), applicationScale.getY());
         stage.setScene(scene);
         stage.setOnCloseRequest(event -> {
             activeFunctionCalculationStrategy.stopCalculating();
@@ -123,8 +106,9 @@ public class FunctionCalculatorApplication extends Application {
         drawButton.setDisable(true);
 
         activeFunctionCalculationStrategy.setCalculationValues(Double.parseDouble(aTextField.getText()),
-                Double.parseDouble(kTextField.getText()), Double.parseDouble(xTextField.getText()));
-        dataSeries.getData().clear();
+                Double.parseDouble(kTextField.getText()), Double.parseDouble(stepXTextField.getText()));
+
+        functionDrawer.Clear();
 
         activeFunctionCalculationStrategy.calculateWithDelay();
     }

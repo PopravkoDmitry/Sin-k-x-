@@ -1,47 +1,50 @@
 package com.example.function_calculators;
 
+import com.example.sinfx.FunctionDrawer;
+import com.example.sinfx.Point2D;
 import javafx.application.Platform;
-import javafx.scene.chart.XYChart;
 import java.util.function.Consumer;
 
 public abstract class FunctionCalculationStrategy {
     protected double a = 1;
     protected double k = 1;
-    protected double maxX = 10;
-    protected final double stepX = 0.1;
-    protected final int sleepTime = 70;
+    protected double maxX;
+    private double stepX;
+    private final int sleepTime = 70;
     protected boolean isCalculationRunning;
-    XYChart.Series<Number, Number> XYSeries;
+
+    protected FunctionDrawer functionDrawer;
     protected Consumer<Void> onCalculationEnd;
 
-    public FunctionCalculationStrategy(XYChart.Series<Number, Number> targetXYSeries, Consumer<Void> onCalculationEndMethod) {
-        XYSeries = targetXYSeries;
+    public FunctionCalculationStrategy(FunctionDrawer functionDrawer, Consumer<Void> onCalculationEndMethod, double maxXValue) {
+        this.functionDrawer = functionDrawer;
         onCalculationEnd = onCalculationEndMethod;
+        maxX = maxXValue;
     }
 
     public abstract void calculateWithDelay();
 
-    public void setCalculationValues(double aValue, double kValue, double maxXValue) {
+    public void setCalculationValues(double aValue, double kValue, double stepX) {
 
         a = aValue;
         k = kValue;
-        maxX = maxXValue;
+        this.stepX = stepX;
     }
 
     protected void calculateFunction(String message) {
 
         isCalculationRunning = true;
-        double x = 0;
+        double x = stepX;
         double y;
 
-        while (x <= maxX && isCalculationRunning && XYSeries != null) {
+        while (x <= maxX && isCalculationRunning && functionDrawer != null) {
 
             y = a * Math.sin(k * x);
 
             double finalX = x;
             double finalY = y;
 
-            Platform.runLater(() -> XYSeries.getData().add(new XYChart.Data<>(finalX, finalY)));
+            Platform.runLater(() -> functionDrawer.drawNextPoint(new Point2D(finalX, finalY)));
 
             try {
                 Thread.sleep(sleepTime);
@@ -49,7 +52,7 @@ public abstract class FunctionCalculationStrategy {
                 throw new RuntimeException(e);
             }
 
-            System.out.println(message + " " + x);
+            System.out.println(message + " " + x + "   " + y);
             x += stepX;
         }
 

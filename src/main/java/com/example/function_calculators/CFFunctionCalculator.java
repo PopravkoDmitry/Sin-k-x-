@@ -1,13 +1,13 @@
 package com.example.function_calculators;
 
-import javafx.scene.chart.XYChart;
-
+import com.example.sinfx.FunctionDrawer;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class CFFunctionCalculator extends FunctionCalculationStrategy {
-    public CFFunctionCalculator(XYChart.Series<Number, Number> targetXYSeries, Consumer<Void> onCalculationEndMethod) {
-        super(targetXYSeries, onCalculationEndMethod);
+    public CFFunctionCalculator(FunctionDrawer functionDrawer, Consumer<Void> onCalculationEndMethod,
+                                double maxXValue) {
+        super(functionDrawer, onCalculationEndMethod, maxXValue);
     }
 
     @Override
