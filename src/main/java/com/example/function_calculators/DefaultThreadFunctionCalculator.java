@@ -1,14 +1,12 @@
 package com.example.function_calculators;
 
-import com.example.sinfx.FunctionDrawer;
-import java.util.function.Consumer;
+import com.example.sinfx.IFunctionDrawer;
 
 public class DefaultThreadFunctionCalculator extends FunctionCalculationStrategy {
 
 
-    public DefaultThreadFunctionCalculator(FunctionDrawer functionDrawer, Consumer<Void> onCalculationEndMethod,
-                                           double maxXValue) {
-        super(functionDrawer, onCalculationEndMethod, maxXValue);
+    public DefaultThreadFunctionCalculator(IFunctionDrawer functionDrawer, double maxXValue) {
+        super(functionDrawer, maxXValue);
     }
 
     @Override

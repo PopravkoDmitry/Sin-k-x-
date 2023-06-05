@@ -1,6 +1,6 @@
 package com.example.function_calculators;
 
-import com.example.sinfx.FunctionDrawer;
+import com.example.sinfx.IFunctionDrawer;
 import com.example.sinfx.Point2D;
 import javafx.application.Platform;
 import java.util.function.Consumer;
@@ -13,12 +13,11 @@ public abstract class FunctionCalculationStrategy {
     private final int sleepTime = 70;
     protected boolean isCalculationRunning;
 
-    protected FunctionDrawer functionDrawer;
+    protected IFunctionDrawer functionDrawer;
     protected Consumer<Void> onCalculationEnd;
 
-    public FunctionCalculationStrategy(FunctionDrawer functionDrawer, Consumer<Void> onCalculationEndMethod, double maxXValue) {
+    public FunctionCalculationStrategy(IFunctionDrawer functionDrawer, double maxXValue) {
         this.functionDrawer = functionDrawer;
-        onCalculationEnd = onCalculationEndMethod;
         maxX = maxXValue;
     }
 
@@ -61,5 +60,10 @@ public abstract class FunctionCalculationStrategy {
     public void stopCalculating() {
 
         isCalculationRunning = false;
+    }
+
+    public void setOnCalculationEndConsumer(Consumer<Void> consumer) {
+
+        onCalculationEnd = consumer;
     }
 }

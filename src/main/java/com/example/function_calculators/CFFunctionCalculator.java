@@ -1,13 +1,13 @@
 package com.example.function_calculators;
 
-import com.example.sinfx.FunctionDrawer;
+import com.example.sinfx.IFunctionDrawer;
+
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 public class CFFunctionCalculator extends FunctionCalculationStrategy {
-    public CFFunctionCalculator(FunctionDrawer functionDrawer, Consumer<Void> onCalculationEndMethod,
+    public CFFunctionCalculator(IFunctionDrawer functionDrawer,
                                 double maxXValue) {
-        super(functionDrawer, onCalculationEndMethod, maxXValue);
+        super(functionDrawer, maxXValue);
     }
 
     @Override

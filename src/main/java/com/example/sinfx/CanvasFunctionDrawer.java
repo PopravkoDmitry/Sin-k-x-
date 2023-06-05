@@ -4,14 +4,14 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
 
-public class FunctionDrawer {
+public class CanvasFunctionDrawer implements IFunctionDrawer{
 
     private Point2D previousPoint;
     private Point2D startPoint;
     private final GraphicsContext graphicsContext;
     private Point2D canvasSize;
 
-    public FunctionDrawer(Canvas canvasToDraw, Point2D startPoint) {
+    public CanvasFunctionDrawer(Canvas canvasToDraw, Point2D startPoint) {
         graphicsContext = canvasToDraw.getGraphicsContext2D();
         this.startPoint = startPoint;
         previousPoint = startPoint;
@@ -20,6 +20,7 @@ public class FunctionDrawer {
         canvasSize = new Point2D(canvasToDraw.getWidth(), canvasToDraw.getWidth());
     }
 
+    @Override
     public void drawNextPoint(Point2D newPoint) {
 
         var nextPoint = new Point2D(newPoint.getX(), previousPoint.getY() - newPoint.getY());
@@ -36,4 +37,3 @@ public class FunctionDrawer {
         previousPoint = startPoint;
     }
 }
-

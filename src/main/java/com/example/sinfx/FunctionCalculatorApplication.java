@@ -27,7 +27,7 @@ public class FunctionCalculatorApplication extends Application {
     private Button drawButton;
     private final Point2D applicationScale = new Point2D(600, 600);
 
-    private FunctionDrawer functionDrawer;
+    private CanvasFunctionDrawer functionDrawer;
 
     @Override
     public void start(Stage stage) {
@@ -41,12 +41,12 @@ public class FunctionCalculatorApplication extends Application {
         Text xText = new Text("Step:");
 
         Canvas canvas = new Canvas(applicationScale.getX(), applicationScale.getY());
-        functionDrawer = new FunctionDrawer(canvas, new Point2D(0, canvas.getHeight() / 2));
+        functionDrawer = new CanvasFunctionDrawer(canvas, new Point2D(0, canvas.getHeight() / 2));
 
-        defaultFunctionCalculator = new DefaultThreadFunctionCalculator(functionDrawer,
-                this::onCalculationEnd, applicationScale.getX());
-        cfFunctionCalculator = new CFFunctionCalculator(functionDrawer,
-                this::onCalculationEnd, applicationScale.getX());
+        defaultFunctionCalculator = new DefaultThreadFunctionCalculator(functionDrawer, applicationScale.getX());
+        defaultFunctionCalculator.setOnCalculationEndConsumer(this::onCalculationEnd);
+        cfFunctionCalculator = new CFFunctionCalculator(functionDrawer, applicationScale.getX());
+        cfFunctionCalculator.setOnCalculationEndConsumer(this::onCalculationEnd);
         activeFunctionCalculationStrategy = defaultFunctionCalculator;
 
 
