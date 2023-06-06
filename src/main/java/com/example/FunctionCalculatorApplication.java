@@ -1,4 +1,4 @@
-package com.example.test;
+package com.example;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;

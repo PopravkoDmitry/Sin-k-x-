@@ -1,15 +1,15 @@
-package com.example.sinfx;
+package com.example.painter;
 
 public class Point2D {
-    private double x;
-    private double y;
+    private final double x;
+    private final double y;
 
     public double getX() {
-        return x;
+        return this.x;
     }
 
     public double getY() {
-        return y;
+        return this.y;
     }
 
     public Point2D(double x, double y) {
