@@ -1,12 +1,10 @@
 package com.example;
 
-import com.example.functions.SinusCalculator;
+import com.example.functions.FunctionCalculator;
+import com.example.functions.Sinusoid;
+import com.example.painter.*;
 import com.example.runners.CompletableRunner;
 import com.example.runners.ThreadRunner;
-import com.example.painter.AsyncDrawer;
-import com.example.painter.CanvasRenderer;
-import com.example.painter.IRenderer;
-import com.example.painter.Point2D;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -27,12 +25,12 @@ public class FunctionPainter extends Application {
 
     private Iterable<Point2D> currentContentSupplier;
     private AsyncDrawer painter;
-
     private TextField aTextField;
     private TextField stepXTextField;
     private TextField kTextField;
     private Button drawButton;
     private Button stopButton;
+    private Button clearButton;
     private final Point2D windowSize = new Point2D(900, 600);
 
     private IRenderer functionDrawer;
@@ -51,15 +49,20 @@ public class FunctionPainter extends Application {
         this.functionDrawer = new CanvasRenderer(this.windowSize);
         this.painter = new AsyncDrawer(ThreadRunner.INSTANCE);
 
-        drawButton = new Button("Draw y(x) = A*sin(k*x)");
-        stopButton = new Button("Stop");
-        stopButton.setDisable(true);
+        this.drawButton = new Button("Draw y(x) = A*sin(k*x)");
+        this.stopButton = new Button("Stop");
+        this.stopButton.setDisable(true);
+        this.clearButton = new Button("Clear canvas");
 
         drawButton.setOnAction(this::setNewValuesAndRecalculateFunction);
         stopButton.setOnAction(event -> {
             this.painter.stopCurrentTask();
             drawButton.setDisable(false);
             stopButton.setDisable(true);
+        });
+        clearButton.setOnAction(event -> {
+            this.functionDrawer.clear();
+            resetCalculator();
         });
 
         MenuBar menuBar = new MenuBar();
@@ -89,8 +92,7 @@ public class FunctionPainter extends Application {
         borderPane.setBottom(hBox);
         hBox.setSpacing(BOTTOM_LINE_SPACING);
 
-        Button clearButton = new Button("Clear canvas");
-        clearButton.setOnAction(event -> this.functionDrawer.clear());
+
 
         hBox.getChildren().addAll(aText, aTextField, xText, stepXTextField, kText, kTextField, clearButton,
                 drawButton, stopButton);
@@ -106,24 +108,28 @@ public class FunctionPainter extends Application {
 
     private void setNewValuesAndRecalculateFunction(ActionEvent event) {
         drawButton.setDisable(true);
+        clearButton.setDisable(true);
         stopButton.setDisable(false);
 
         if (this.currentContentSupplier == null || !this.currentContentSupplier.iterator().hasNext()) {
-            SinusCalculator sinusCalculator = new SinusCalculator(0, this.windowSize.getY());
-            sinusCalculator.setCalculationValues(Double.parseDouble(aTextField.getText()),
-                    Double.parseDouble(kTextField.getText()), Double.parseDouble(stepXTextField.getText()));
-
-            this.currentContentSupplier = sinusCalculator;
+            resetCalculator();
         }
 
         this.painter.run(this.currentContentSupplier, nextPoint -> {
             Platform.runLater(() -> this.functionDrawer.drawNextPoint(nextPoint));
         }, this::onCalculationEnd);
-
-//        functionDrawer.clear();
     }
 
     private void onCalculationEnd() {
         this.drawButton.setDisable(false);
+        this.clearButton.setDisable(false);
+    }
+
+    private void resetCalculator() {
+        FunctionCalculator functionCalculator = new FunctionCalculator(0, this.windowSize.getY(), new Sinusoid());
+        functionCalculator.setCalculationValues(Double.parseDouble(aTextField.getText()),
+                Double.parseDouble(kTextField.getText()), Double.parseDouble(stepXTextField.getText()));
+
+        this.currentContentSupplier = functionCalculator;
     }
 }

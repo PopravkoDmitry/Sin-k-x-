@@ -7,7 +7,6 @@ import javafx.scene.paint.Color;
 public class CanvasRenderer implements IRenderer {
 
     private final Canvas canvas;
-
     private Point2D previousPoint;
     private Point2D startPoint;
 
@@ -37,6 +36,10 @@ public class CanvasRenderer implements IRenderer {
 
     public void clear() {
         this.canvas.getGraphicsContext2D().fillRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
+        resetStartPoint();
+    }
+
+    public void resetStartPoint() {
         this.previousPoint = this.startPoint;
     }
 }

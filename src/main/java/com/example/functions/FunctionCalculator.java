@@ -4,16 +4,18 @@ import com.example.painter.Point2D;
 
 import java.util.Iterator;
 
-public class SinusCalculator implements Iterator<Point2D>, Iterable<Point2D> {
+public class FunctionCalculator implements Iterator<Point2D>, Iterable<Point2D> {
     private final double maxX;
     private double a = 1;
     private double k = 1;
     private double stepX;
     private double currentX;
+    private IFunction function;
 
-    public SinusCalculator(double startX, double maxXValue) {
+    public FunctionCalculator(double startX, double maxXValue, IFunction function) {
         this.maxX = maxXValue;
         this.currentX = startX;
+        this.function = function;
     }
 
     public void setCalculationValues(double aValue, double kValue, double stepX) {
@@ -31,7 +33,7 @@ public class SinusCalculator implements Iterator<Point2D>, Iterable<Point2D> {
     public Point2D next() {
         double x = this.currentX;
         this.currentX += this.stepX;
-        return new Point2D(x, this.a * Math.sin(this.k * x));
+        return function.calculatePointAtX(this.a, this.k, x);
     }
 
     @Override

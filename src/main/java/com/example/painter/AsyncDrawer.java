@@ -20,13 +20,12 @@ public class AsyncDrawer {
 
         this.runner.run(() -> {
             for (Point2D currentPoint : drawingContent) {
+                taskSupplier.accept(currentPoint);
 
                 if (this.stopCurrentTask) {
                     this.stopCurrentTask = false;
                     break;
                 }
-
-                taskSupplier.accept(currentPoint);
 
                 try {
                     Thread.sleep(30);
