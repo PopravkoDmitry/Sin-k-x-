@@ -1,7 +1,6 @@
 package com.example;
 
-import com.example.functions.FunctionCalculator;
-import com.example.functions.Sinusoid;
+import com.example.functions.*;
 import com.example.painter.*;
 import com.example.runners.CompletableRunner;
 import com.example.runners.ThreadRunner;
@@ -20,10 +19,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FunctionPainter extends Application {
     private final double BOTTOM_LINE_SPACING = 5;
 
     private Iterable<Point2D> currentContentSupplier;
+    private FunctionCalculator functionCalculator;
     private AsyncDrawer painter;
     private TextField aTextField;
     private TextField stepXTextField;
@@ -33,7 +36,9 @@ public class FunctionPainter extends Application {
     private Button clearButton;
     private final Point2D windowSize = new Point2D(900, 600);
 
+    private IFunction<Coefficients> function = new Sinusoid();
     private IRenderer functionDrawer;
+    private final List<Point2D> drawnPoints = new ArrayList<>();
 
     @Override
     public void start(Stage stage) {
@@ -61,27 +66,47 @@ public class FunctionPainter extends Application {
             stopButton.setDisable(true);
         });
         clearButton.setOnAction(event -> {
+            this.drawnPoints.clear();
             this.functionDrawer.clear();
             resetCalculator();
         });
 
         MenuBar menuBar = new MenuBar();
-        Menu menu = new Menu("Active Calculation Type: Default Thread");
+        Menu runnerMenu = new Menu("Active Calculation Type: Default Thread");
+        Menu rendererMenu = new Menu("Active Renderer: Canvas");
+        Menu functionMenu = new Menu("Active Function: Sinus");
 
-        MenuItem menuItem1 = new MenuItem("Thread");
-        menuItem1.setOnAction(event -> {
+
+
+        MenuItem runnerMenuItem1 = new MenuItem("Thread");
+        runnerMenuItem1.setOnAction(event -> {
             this.painter.setRunner(ThreadRunner.INSTANCE);
-            menu.setText("Calculation runner: Thread");
+            runnerMenu.setText("Calculation runner: Thread");
         });
 
-        MenuItem menuItem2 = new MenuItem("CompletableFuture");
-        menuItem2.setOnAction(event -> {
+        MenuItem runnerMenuItem2 = new MenuItem("CompletableFuture");
+        runnerMenuItem2.setOnAction(event -> {
             this.painter.setRunner(new CompletableRunner());
-            menu.setText("Calculation runner: CompletableFuture");
+            runnerMenu.setText("Calculation runner: CompletableFuture");
         });
 
-        menu.getItems().addAll(menuItem1, menuItem2);
-        menuBar.getMenus().add(menu);
+        MenuItem rendererMenuItem1 = new MenuItem("Canvas");
+        MenuItem rendererMenuItem2 = new MenuItem("LineChart");
+        MenuItem functionMenuItem1 = new MenuItem("Sinus");
+        functionMenuItem1.setOnAction(event -> {
+            function = new Sinusoid();
+            functionMenu.setText("Active Function: Sinus");
+        });
+        MenuItem functionMenuItem2 = new MenuItem("Tangent");
+        functionMenuItem2.setOnAction(event -> {
+            function = new Tangential();
+            functionMenu.setText("Active Function: Tangent");
+        });
+
+        runnerMenu.getItems().addAll(runnerMenuItem1, runnerMenuItem2);
+        rendererMenu.getItems().addAll(rendererMenuItem1, rendererMenuItem2);
+        functionMenu.getItems().addAll(functionMenuItem1, functionMenuItem2);
+        menuBar.getMenus().addAll(runnerMenu, rendererMenu, functionMenu);
 
         StackPane rootPanel = new StackPane();
         BorderPane borderPane = new BorderPane();
@@ -92,7 +117,21 @@ public class FunctionPainter extends Application {
         borderPane.setBottom(hBox);
         hBox.setSpacing(BOTTOM_LINE_SPACING);
 
+        rendererMenuItem2.setOnAction(event -> {
+            this.functionDrawer = new LineChartRenderer();
+            rootPanel.getChildren().remove(0);
+            rootPanel.getChildren().add(0, functionDrawer.getSurface());
+            rendererMenu.setText("Active Renderer: LineChart");
+            functionDrawer.reDraw(drawnPoints);
+        });
 
+        rendererMenuItem1.setOnAction(event -> {
+            this.functionDrawer = new CanvasRenderer(this.windowSize);
+            rootPanel.getChildren().remove(0);
+            rootPanel.getChildren().add(0, functionDrawer.getSurface());
+            rendererMenu.setText("Active Renderer: Canvas");
+            functionDrawer.reDraw(drawnPoints);
+        });
 
         hBox.getChildren().addAll(aText, aTextField, xText, stepXTextField, kText, kTextField, clearButton,
                 drawButton, stopButton);
@@ -116,7 +155,7 @@ public class FunctionPainter extends Application {
         }
 
         this.painter.run(this.currentContentSupplier, nextPoint -> {
-            Platform.runLater(() -> this.functionDrawer.drawNextPoint(nextPoint));
+            Platform.runLater(() -> this.functionDrawer.drawNextPoint(nextPoint, this.drawnPoints));
         }, this::onCalculationEnd);
     }
 
@@ -126,9 +165,10 @@ public class FunctionPainter extends Application {
     }
 
     private void resetCalculator() {
-        FunctionCalculator functionCalculator = new FunctionCalculator(0, this.windowSize.getY(), new Sinusoid());
-        functionCalculator.setCalculationValues(Double.parseDouble(aTextField.getText()),
-                Double.parseDouble(kTextField.getText()), Double.parseDouble(stepXTextField.getText()));
+        function.setCoefficients(new Coefficients(Double.parseDouble(aTextField.getText()),
+                Double.parseDouble(kTextField.getText())));
+        functionCalculator = new FunctionCalculator(0, this.windowSize.getY(), function);
+        functionCalculator.setCalculationValues(Double.parseDouble(stepXTextField.getText()));
 
         this.currentContentSupplier = functionCalculator;
     }
