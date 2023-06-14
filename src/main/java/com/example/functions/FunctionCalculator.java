@@ -3,19 +3,18 @@ package com.example.functions;
 import com.example.painter.Point2D;
 
 import java.util.Iterator;
-import java.util.List;
 
 public class FunctionCalculator implements Iterator<Point2D>, Iterable<Point2D> {
     private final double maxX;
     private double stepX;
     private double currentX;
-    private List<Point2D> drawnPoints;
     private IFunction function;
 
-    public FunctionCalculator(double startX, double maxXValue, IFunction function) {
+    public FunctionCalculator(double startX, double stepX, double maxXValue, IFunction function) {
         this.maxX = maxXValue;
         this.currentX = startX;
         this.function = function;
+        this.stepX = stepX;
     }
 
     public void setCalculationValues(double stepX) {

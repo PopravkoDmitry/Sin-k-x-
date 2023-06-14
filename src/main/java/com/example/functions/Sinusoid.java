@@ -12,7 +12,6 @@ public class Sinusoid implements IFunction<Coefficients> {
 
     @Override
     public Point2D calculatePointAtX(double xValue) {
-        return new Point2D(xValue,
-                coefficients.getA() * Math.sin(coefficients.getK() * xValue));
+        return new Point2D(xValue, coefficients.getA() * Math.sin(coefficients.getK() * xValue));
     }
 }

@@ -11,4 +11,6 @@ module com.example.sinfx {
     opens com.example.runners to javafx.fxml;
     exports com.example;
     opens com.example to javafx.fxml;
+    exports com.example.views;
+    opens com.example.views to javafx.fxml;
 }

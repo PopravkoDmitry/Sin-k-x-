@@ -26,12 +26,6 @@ public class LineChartRenderer implements IRenderer{
     }
 
     @Override
-    public void drawNextPoint(Point2D newPoint, List<Point2D> container) {
-        this.drawNextPoint(newPoint);
-        container.add(newPoint);
-    }
-
-    @Override
     public void reDraw(List<Point2D> drawnPoints) {
         if(drawnPoints == null) {
             return;

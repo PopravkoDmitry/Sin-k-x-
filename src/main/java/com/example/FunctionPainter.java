@@ -155,7 +155,10 @@ public class FunctionPainter extends Application {
         }
 
         this.painter.run(this.currentContentSupplier, nextPoint -> {
-            Platform.runLater(() -> this.functionDrawer.drawNextPoint(nextPoint, this.drawnPoints));
+            Platform.runLater(() -> {
+                this.functionDrawer.drawNextPoint(nextPoint);
+                drawnPoints.add(nextPoint);
+            });
         }, this::onCalculationEnd);
     }
 
@@ -167,7 +170,8 @@ public class FunctionPainter extends Application {
     private void resetCalculator() {
         function.setCoefficients(new Coefficients(Double.parseDouble(aTextField.getText()),
                 Double.parseDouble(kTextField.getText())));
-        functionCalculator = new FunctionCalculator(0, this.windowSize.getY(), function);
+        functionCalculator = new FunctionCalculator(0, Double.parseDouble(stepXTextField.getText()),
+                this.windowSize.getY(), function);
         functionCalculator.setCalculationValues(Double.parseDouble(stepXTextField.getText()));
 
         this.currentContentSupplier = functionCalculator;

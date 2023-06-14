@@ -31,12 +31,6 @@ public class CanvasRenderer implements IRenderer {
     }
 
     @Override
-    public void drawNextPoint(Point2D newPoint, List<Point2D> container) {
-        this.drawNextPoint(newPoint);
-        container.add(newPoint);
-    }
-
-    @Override
     public void reDraw(List<Point2D> drawnPoints) {
         if(drawnPoints == null) {
             return;
@@ -54,10 +48,6 @@ public class CanvasRenderer implements IRenderer {
 
     public void clear() {
         this.canvas.getGraphicsContext2D().fillRect(0, 0, this.canvas.getWidth(), this.canvas.getHeight());
-        resetStartPoint();
-    }
-
-    public void resetStartPoint() {
         this.previousPoint = this.startPoint;
     }
 }
